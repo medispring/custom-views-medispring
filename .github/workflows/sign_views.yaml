@@ -1,0 +1,64 @@
+name: View cleaning and signing
+
+on:
+    push:
+        branches:
+            - 'main'
+    workflow_dispatch:
+        
+jobs:
+    view-cleanup:
+        name: Views clean-up and signing
+        runs-on: ubuntu-latest
+        steps:
+            -   name: checkout
+                uses: actions/checkout@v4
+                with:
+                    fetch-depth: 0
+
+            -   name: Set up node  
+                uses: actions/setup-node@v4
+                with:
+                    node-version: 18
+                  
+            -   name: Install terser
+                run: npm install -g terser
+              
+            -   name: run terser
+                run: |
+                    mkdir minified
+                    find views -type f -name "*.js" -exec sh -c '
+                    for file; do
+                        if ! basename "$file" | grep -qE "^[0-9a-z_]+.js$"; then
+                            echo "Invalid view file name $file"
+                            exit 1 
+                        fi
+                        relative_path="${file#*/}"
+                        minified_dir="minified/$(dirname "$relative_path")"
+                        mkdir -p "$minified_dir"
+                        terser "$file" -o "$minified_dir/$(basename "$file")"
+                        if [ $? -ne 0 ]; then
+                            echo "Invalid JS file $file" >&2
+                            exit 1
+                        fi
+                        echo "Minified $file"
+                    done' sh {} +
+
+            -   name: Set up JDK 21
+                uses: actions/setup-java@v4
+                with:
+                    java-version: '21'
+                    distribution: 'temurin'
+
+            -   name: Parse and sign the views
+                run: |
+                    rm -rf output
+                    java -jar .github/signer.jar --input=minified --output=output --key="${{ secrets.SIGNING_PRIV_KEY }}"
+
+            -   name: Commit and push
+                run: |
+                    git config --global user.name "iCure devs"
+                    git config --global user.email "dev@icure.com"
+                    git add .
+                    git commit -m "Prepared and signed views"
+                    git push
