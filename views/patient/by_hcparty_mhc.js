@@ -2,9 +2,7 @@ map = function (doc) {
   var emit_patients_by_mhc = function (hcparty, doc) {
     if(doc.medicalHouseContracts.length){
       doc.medicalHouseContracts.forEach(function (mhc) {
-        if (mhc.startOfCoverage && (!mhc.endOfCoverage || mhc.endOfCoverage === 0 || mhc.endOfCoverage === null)) {
-          emit([hcparty, mhc.startOfCoverage, mhc.endOfCoverage, doc._id])
-        }
+        emit([hcparty, mhc.startOfCoverage, mhc.endOfCoverage, doc._id])
       });
     }
 
