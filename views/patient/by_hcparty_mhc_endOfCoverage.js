@@ -3,7 +3,7 @@ map = function (doc) {
     if(doc.medicalHouseContracts.length){
       doc.medicalHouseContracts.forEach(function (mhc) {
         if(mhc.startOfCoverage){
-          emit([hcparty, mhc.startOfCoverage, mhc.endOfCoverage], null)
+          emit([hcparty, mhc.endOfCoverage], null)
         }
       });
     }
