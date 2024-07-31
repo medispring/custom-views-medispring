@@ -2,10 +2,11 @@ map = function (doc) {
   var emit_patients_by_mhc = function (hcparty, doc) {
     if(doc.medicalHouseContracts.length){
       doc.medicalHouseContracts.forEach(function (mhc) {
-        emit([hcparty, mhc.startOfCoverage, mhc.endOfCoverage, doc._id])
+        if(mhc.startOfCoverage && mhc.startOfCoverage !== null){
+          emit([hcparty, mhc.startOfCoverage, mhc.endOfCoverage])
+        }
       });
     }
-
   };
 
   if (doc.java_type === 'org.taktik.icure.entities.Patient' && !doc.deleted) {
@@ -16,3 +17,4 @@ map = function (doc) {
     }
   }
 };
+
